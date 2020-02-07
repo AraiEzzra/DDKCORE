@@ -114,21 +114,23 @@ describe('Test GET_ACCOUNT', () => {
             actualBalance: 89999000000,
             referrals: [],
             votes: [],
-            stakes: [{
-                createdAt: 0,
-                isActive: true,
-                amount: 10000000000,
-                voteCount: 0,
-                nextVoteMilestone: 0,
-                airdropReward: {
-                    sponsors: {},
-                },
-                previousMilestones: [],
-                sourceTransactionId: Buffer.from('2417a12ffff13cc6eff34d79791f908f5b52bc9976a1769fbf8bbdc3220c97d9', 'hex'),
-            }],
+            stakes: [],
             arp: {
                 referrals: [],
-                stakes: [],
+                stakes: [
+                    {
+                        createdAt: 0,
+                        isActive: true,
+                        amount: 10000000000,
+                        voteCount: 0,
+                        nextVoteMilestone: 0,
+                        airdropReward: {
+                            sponsors: {},
+                        },
+                        previousMilestones: [],
+                        sourceTransactionId: Buffer.from('2417a12ffff13cc6eff34d79791f908f5b52bc9976a1769fbf8bbdc3220c97d9', 'hex'),
+                    },
+                ],
             },
         };
 
@@ -161,21 +163,23 @@ describe('Test GET_ACCOUNT', () => {
                 confirmedVoteCount: 2,
                 approval: 0,
             }],
-            stakes: [{
-                createdAt: 0,
-                isActive: true,
-                amount: 10000000000,
-                voteCount: 1,
-                nextVoteMilestone: 104008362,
-                airdropReward: {
-                    sponsors: {},
-                },
-                previousMilestones: [0],
-                sourceTransactionId: Buffer.from('42d253826012103aec237eed68ca8093692bec7640df4359ea1e41a3240d100c', 'hex')
-            }],
+            stakes: [],
             arp: {
                 referrals: [],
-                stakes: [],
+                stakes: [
+                    {
+                        createdAt: 0,
+                        isActive: true,
+                        amount: 10000000000,
+                        voteCount: 1,
+                        nextVoteMilestone: 104008362,
+                        airdropReward: {
+                            sponsors: {},
+                        },
+                        previousMilestones: [0],
+                        sourceTransactionId: Buffer.from('42d253826012103aec237eed68ca8093692bec7640df4359ea1e41a3240d100c', 'hex')
+                    },
+                ],
             },
         };
 

@@ -22,6 +22,7 @@ import {
     isSponsorsExist,
 } from 'core/util/reward';
 import BlockStorageService from 'core/service/blockStorage';
+import { isARPEnabled } from 'core/util/feature';
 
 const MIN_STAKE_AMOUNT = MONEY_FACTOR;
 
@@ -113,7 +114,8 @@ class TransactionStakeService implements IAssetService<IAssetStake> {
 
     applyUnconfirmed(trs: Transaction<IAssetStake>, sender: Account): void {
         sender.actualBalance -= trs.asset.amount;
-        sender.stakes.push(new Stake({
+
+        const stake = new Stake({
             createdAt: trs.createdAt,
             isActive: true,
             amount: trs.asset.amount,
@@ -121,7 +123,9 @@ class TransactionStakeService implements IAssetService<IAssetStake> {
             nextVoteMilestone: trs.createdAt,
             airdropReward: trs.asset.airdropReward,
             sourceTransactionId: Buffer.from(trs.id, 'hex'),
-        }));
+        });
+        sender.getStakes().push(stake);
+
         if (isSponsorsExist(trs)) {
             sendAirdropReward(trs);
         }
@@ -131,9 +135,11 @@ class TransactionStakeService implements IAssetService<IAssetStake> {
 
     undoUnconfirmed(trs: Transaction<IAssetStake>, sender: Account, senderOnly: boolean): void {
         sender.actualBalance += trs.asset.amount;
-        for (let i = sender.stakes.length - 1; i > -1; i--) {
-            if (sender.stakes[i].sourceTransactionId.toString('hex') === trs.id) {
-                sender.stakes.splice(i, 1);
+
+        const stakes = sender.getStakes();
+        for (let i = stakes.length - 1; i > -1; i--) {
+            if (stakes[i].sourceTransactionId.toString('hex') === trs.id) {
+                stakes.splice(i, 1);
             }
         }
         if (!senderOnly && isSponsorsExist(trs)) {

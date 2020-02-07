@@ -44,7 +44,9 @@ class TransactionRegisterService implements IAssetService<IAssetRegister> {
             sender.delegate ||
             (sender.votes && sender.votes.length) ||
             (sender.referrals && sender.referrals.length) ||
-            (sender.stakes && sender.stakes.length)
+            (sender.stakes && sender.stakes.length) ||
+            (sender.arp.referrals && sender.arp.referrals.length) ||
+            (sender.arp.stakes && sender.arp.stakes.length)
         ) {
             return new ResponseEntity<void>({ errors: ['Account already exists.'] });
         }
