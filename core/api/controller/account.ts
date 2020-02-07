@@ -10,6 +10,7 @@ class AccountController {
     constructor() {
         this.getAccount = this.getAccount.bind(this);
         this.getAccountBalance = this.getAccountBalance.bind(this);
+        this.isReferrer = this.isReferrer.bind(this);
     }
 
     @API(API_ACTION_TYPES.GET_ACCOUNT)

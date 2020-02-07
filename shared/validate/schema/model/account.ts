@@ -22,5 +22,16 @@ export const SCHEMAS_ACCOUNTS = [
             }
         },
         required: ['address']
+    },
+    {
+        id: API_ACTION_TYPES.IS_ACCOUNT_REFERRER,
+        type: 'object',
+        properties: {
+            address: {
+                type: 'string',
+                format: 'address'
+            }
+        },
+        required: ['address']
     }
 ];
