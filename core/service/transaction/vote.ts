@@ -245,7 +245,7 @@ class TransactionVoteService implements IAssetService<IAssetVote> {
         }
 
         const processedOrders: Array<Stake> = [];
-        sender.getStakes()
+        sender.getAllStakes()
             .filter(stake => stake.isActive && trs.createdAt >= stake.nextVoteMilestone)
             .forEach((stake: Stake) => {
                 stake.voteCount++;
@@ -290,7 +290,7 @@ class TransactionVoteService implements IAssetService<IAssetVote> {
             undoAirdropReward(trs);
         }
 
-        sender.getStakes()
+        sender.getAllStakes()
             .filter(stake =>
                 stake.isActive &&
                 trs.createdAt + config.CONSTANTS.FROZE.VOTE_MILESTONE === stake.nextVoteMilestone

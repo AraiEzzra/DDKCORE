@@ -110,7 +110,7 @@ export function undoFrozeOrdersRewardAndUnstake(
     sender: Account,
     senderOnly: boolean
 ): void {
-    const updatedOrders = sender.getStakes().filter((order: Stake) => {
+    const updatedOrders = sender.getAllStakes().filter((order: Stake) => {
         return order.nextVoteMilestone === trs.createdAt + config.CONSTANTS.FROZE.VOTE_MILESTONE;
     });
     undoUnstake(updatedOrders, trs, sender);

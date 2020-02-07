@@ -4,6 +4,7 @@ import config from 'shared/config';
 import { AccountState, TransactionId } from 'shared/model/types';
 import { Airdrop } from 'shared/model/airdrop';
 import { isARPEnabled } from 'core/util/feature';
+import { AirdropType } from 'ddk.registry/dist/model/common/airdrop';
 
 export enum AccountChangeAction {
     TRANSACTION_APPLY_UNCONFIRMED = 'TRANSACTION_APPLY_UNCONFIRMED',
@@ -38,22 +39,32 @@ export class Account extends AccountModel {
         });
     }
 
+    getAllStakes = (): Array<Stake> => {
+        return [...this.stakes, ...this.arp.stakes];
+    }
+
     getActiveStakes = (): Array<Stake> => {
-        return this.stakes.filter(stake => stake.isActive);
+        return this.getAllStakes().filter(stake => stake.isActive);
     }
 
     getARPActiveStakes = (): Array<Stake> => {
         return this.arp.stakes.filter(stake => stake.isActive);
     }
 
-    getStakes = (): Array<Stake> => {
+    getStakes = (type?: AirdropType): Array<Stake> => {
+        if (type === AirdropType.AIRDROP) {
+            return this.stakes;
+        } else if (type === AirdropType.ARP) {
+            return this.arp.stakes;
+        }
+
         return isARPEnabled()
             ? this.arp.stakes
             : this.stakes;
     }
 
     getTotalStakeAmount = (): number => {
-        return this.getStakes().reduce((acc: number, stake: Stake) => {
+        return this.getAllStakes().reduce((acc: number, stake: Stake) => {
             if (stake.isActive) {
                 acc += stake.amount;
             }
