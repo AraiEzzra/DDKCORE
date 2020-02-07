@@ -108,6 +108,9 @@ const constants: IConstants = {
         VERIFY_STAKE_TRANSACTION_BLOCK_HEIGHT: 0,
     },
     CORE_REQUEST_TIMEOUT: 10000,
+    WHITELIST: {
+        TRANSACTION_IDS: new Set(),
+    },
 };
 /* tslint:enable */
 

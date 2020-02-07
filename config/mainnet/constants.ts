@@ -1607,6 +1607,10 @@ const constants: IConstants = {
         VERIFY_STAKE_TRANSACTION_BLOCK_HEIGHT: 1009955,
     },
     TRANSACTION_TTL: 5 * 24 * 60 * 60,
+    WHITELIST: {
+        // TODO: Add id of send transaction from total supply to ARP account
+        TRANSACTION_IDS: new Set(),
+    },
 };
 /* tslint:enable */
 
