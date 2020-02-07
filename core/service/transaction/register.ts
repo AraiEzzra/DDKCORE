@@ -50,7 +50,7 @@ class TransactionRegisterService implements IAssetService<IAssetRegister> {
         }
 
         const referrer: Account = AccountRepo.getByAddress(trs.asset.referral);
-        if (!isAccountReferrer(referrer)) {
+        if (isARPEnabled() && !isAccountReferrer(referrer)) {
             return new ResponseEntity<void>({ errors: ['Referral link is invalid.'] });
         }
 
