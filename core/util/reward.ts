@@ -57,7 +57,7 @@ export const calculateTotalRewardAndUnstake = (
             if (stake.voteCount > 0 && (stake.voteCount + 1) % config.CONSTANTS.FROZE.REWARD_VOTE_COUNT === 0) {
                 const blockHeight: number = BlockRepo.getLastBlock().height;
                 const stakeRewardPercent: number = stakeReward.calcReward(blockHeight);
-                reward += (stake.amount * stakeRewardPercent) / TOTAL_PERCENTAGE;
+                reward += Math.ceil((stake.amount * stakeRewardPercent) / TOTAL_PERCENTAGE);
             }
             if (stake.voteCount + 1 === config.CONSTANTS.FROZE.UNSTAKE_VOTE_COUNT) {
                 unstakeAmount += stake.amount;
