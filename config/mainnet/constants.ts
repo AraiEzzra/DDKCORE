@@ -1480,7 +1480,7 @@ const BLACKLIST = {
     ]),
     GENESIS_BLOCK: new Set([
         BigInt('11696703665952770027'), // Airdrop
-        BigInt('13566253584516829136'), // Total supply
+        // BigInt('13566253584516829136'), // Total supply
         BigInt('7043806098403384872'), // From genesis block
     ]),
     FRAUD_OPERATION: new Set([
