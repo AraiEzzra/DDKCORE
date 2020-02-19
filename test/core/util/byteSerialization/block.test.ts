@@ -24,7 +24,7 @@ describe('Block byte serialize', () => {
             block.transactions = block.transactions.map(trs => serializeAssetTransaction(trs));
             block.transactions = createBufferArray(
                 block.transactions,
-                new BufferTypes.Object(SchemaName.TransactionBlock)
+                new BufferTypes.Object(SchemaName.OldTransactionBlock)
             );
         });
 
